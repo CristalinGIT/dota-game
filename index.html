@@ -6,90 +6,53 @@
 
 <style>
 body {
-  background: #0b1020;
-  color: white;
-  font-family: Arial;
-  text-align: center;
-}
-
-h1 { margin-bottom: 10px; }
-
-.settings {
-  margin-bottom: 15px;
-}
-
-.settings label {
-  margin: 5px;
+  background:#0b1020;
+  color:white;
+  font-family:Arial;
+  text-align:center;
 }
 
 input {
-  padding: 10px;
-  width: 250px;
-  border-radius: 6px;
-  border: none;
+  padding:10px;
+  width:250px;
+  border-radius:6px;
+  border:none;
 }
 
 .suggestions {
-  width: 250px;
-  margin: auto;
-  background: #1a2238;
-  border-radius: 6px;
+  width:250px;
+  margin:auto;
+  background:#1a2238;
 }
 
 .suggestion {
-  padding: 8px;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
+  padding:8px;
+  display:flex;
+  align-items:center;
+  cursor:pointer;
 }
 
-.suggestion:hover { background: #2d3a63; }
+.suggestion:hover { background:#2d3a63; }
 
 .suggestion img {
-  width: 30px;
-  margin-right: 10px;
+  width:30px;
+  margin-right:10px;
 }
 
-.table {
-  margin-top: 20px;
-  display: inline-block;
-}
-
-.row {
-  display: flex;
-}
+.row { display:flex; }
 
 .cell {
-  width: 110px;
-  padding: 10px;
-  margin: 3px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: bold;
+  width:110px;
+  padding:10px;
+  margin:3px;
+  border-radius:6px;
+  font-size:13px;
 }
 
-.green { background: #22c55e; }
-.yellow { background: #facc15; color: black; }
-.red { background: #ef4444; }
-
-.header .cell {
-  background: #1a2238;
-}
-
-#winScreen {
-  display: none;
-  margin-top: 20px;
-  font-size: 22px;
-}
-
-button {
-  padding: 10px;
-  border-radius: 6px;
-  border: none;
-  background: #3b82f6;
-  color: white;
-  cursor: pointer;
-}
+.green{background:#22c55e;}
+.yellow{background:#facc15;color:black;}
+.red{background:#ef4444;}
+.header .cell{background:#1a2238;}
 </style>
 </head>
 
@@ -97,117 +60,109 @@ button {
 
 <h1>Угадай героя Dota 2</h1>
 
-<div class="settings">
-<label><input type="checkbox" id="gender" checked> Пол</label>
-<label><input type="checkbox" id="race" checked> Раса</label>
-<label><input type="checkbox" id="role" checked> Роль</label>
-<label><input type="checkbox" id="attr" checked> Атрибут</label>
-<label><input type="checkbox" id="complexity" checked> Сложность</label>
-<label><input type="checkbox" id="attack" checked> Атака</label>
-<label><input type="checkbox" id="year" checked> Год</label>
-</div>
-
-<input id="input" placeholder="Начни вводить..." oninput="showSuggestions()">
+<input id="input" oninput="showSuggestions()">
 <div id="suggestions" class="suggestions"></div>
 
-<div class="table" id="board"></div>
+<div id="board"></div>
 
-<div id="winScreen">
-🎉 ПОБЕДА! 🎉<br>
-<button onclick="startGame()">Новая игра</button>
-</div>
+<h2 id="win" style="display:none;">🎉 Победа!</h2>
 
-<script src="heroes.js"></script>
+<script src="extraData.js"></script>
 
 <script>
+let heroes=[];
 let answer;
-let gameOver = false;
 
-function startGame() {
-  answer = heroes[Math.floor(Math.random()*heroes.length)];
-  document.getElementById("board").innerHTML = createHeader();
-  document.getElementById("winScreen").style.display = "none";
-  input.disabled = false;
-  gameOver = false;
+async function loadHeroes(){
+  let res=await fetch("https://api.opendota.com/api/heroStats");
+  let data=await res.json();
+
+  heroes=data.map(h=>{
+    let name=h.localized_name.toLowerCase();
+
+    return{
+      name:name,
+      gender:extra[name]?.gender||"unknown",
+      race:extra[name]?.race||"unknown",
+      role:extra[name]?.role||"support",
+      attr:h.primary_attr,
+      complexity:extra[name]?.complexity||2,
+      attack:h.attack_type.toLowerCase(),
+      year:extra[name]?.year||2011,
+      img:"https://cdn.cloudflare.steamstatic.com"+h.img
+    }
+  });
+
+  startGame();
 }
 
-function createHeader() {
-  let html = '<div class="row header">';
-  if (gender.checked) html += '<div class="cell">Пол</div>';
-  if (race.checked) html += '<div class="cell">Раса</div>';
-  if (role.checked) html += '<div class="cell">Роль</div>';
-  if (attr.checked) html += '<div class="cell">Атрибут</div>';
-  if (complexity.checked) html += '<div class="cell">Сложн.</div>';
-  if (attack.checked) html += '<div class="cell">Атака</div>';
-  if (year.checked) html += '<div class="cell">Год</div>';
-  html += '</div>';
-  return html;
+function startGame(){
+  answer=heroes[Math.floor(Math.random()*heroes.length)];
+  board.innerHTML=createHeader();
+  win.style.display="none";
 }
 
-function showSuggestions() {
-  const val = input.value.toLowerCase();
-  suggestions.innerHTML = "";
+function createHeader(){
+  return `<div class="row header">
+  <div class="cell">Пол</div>
+  <div class="cell">Раса</div>
+  <div class="cell">Роль</div>
+  <div class="cell">Атрибут</div>
+  <div class="cell">Сложн</div>
+  <div class="cell">Атака</div>
+  <div class="cell">Год</div>
+  </div>`;
+}
 
-  heroes.filter(h => h.name.includes(val)).slice(0,5).forEach(h => {
-    const div = document.createElement("div");
-    div.className = "suggestion";
-    div.innerHTML = `<img src="${h.img}">${h.name}`;
-    div.onclick = () => guess(h.name);
-    suggestions.appendChild(div);
+function showSuggestions(){
+  let val=input.value.toLowerCase();
+  suggestions.innerHTML="";
+
+  heroes.filter(h=>h.name.includes(val)).slice(0,5).forEach(h=>{
+    let d=document.createElement("div");
+    d.className="suggestion";
+    d.innerHTML=`<img src="${h.img}">${h.name}`;
+    d.onclick=()=>guess(h.name);
+    suggestions.appendChild(d);
   });
 }
 
-function color(a,b){ return a===b?"green":"red"; }
+function color(a,b){return a===b?"green":"red";}
 
 function arrow(a,b){
-  if(a===b) return {c:"green",t:a};
+  if(a===b)return{c:"green",t:a};
   return a<b?{c:"yellow",t:a+" ⬆️"}:{c:"yellow",t:a+" ⬇️"};
 }
 
 function guess(name){
-  if(gameOver) return;
+  let hero=heroes.find(h=>h.name===name);
 
-  const hero = heroes.find(h=>h.name===name);
-  const row = document.createElement("div");
+  let row=document.createElement("div");
   row.className="row";
 
-  if (gender.checked)
-    row.innerHTML += `<div class="cell ${color(hero.gender,answer.gender)}">${hero.gender}</div>`;
+  row.innerHTML+=`<div class="cell ${color(hero.gender,answer.gender)}">${hero.gender}</div>`;
+  row.innerHTML+=`<div class="cell ${color(hero.race,answer.race)}">${hero.race}</div>`;
+  row.innerHTML+=`<div class="cell ${color(hero.role,answer.role)}">${hero.role}</div>`;
+  row.innerHTML+=`<div class="cell ${color(hero.attr,answer.attr)}">${hero.attr}</div>`;
 
-  if (race.checked)
-    row.innerHTML += `<div class="cell ${color(hero.race,answer.race)}">${hero.race}</div>`;
+  let c=arrow(hero.complexity,answer.complexity);
+  row.innerHTML+=`<div class="cell ${c.c}">${c.t}</div>`;
 
-  if (role.checked)
-    row.innerHTML += `<div class="cell ${color(hero.role,answer.role)}">${hero.role}</div>`;
+  row.innerHTML+=`<div class="cell ${color(hero.attack,answer.attack)}">${hero.attack}</div>`;
 
-  if (attr.checked)
-    row.innerHTML += `<div class="cell ${color(hero.attr,answer.attr)}">${hero.attr}</div>`;
-
-  if (complexity.checked){
-    let r=arrow(hero.complexity,answer.complexity);
-    row.innerHTML += `<div class="cell ${r.c}">${r.t}</div>`;
-  }
-
-  if (attack.checked)
-    row.innerHTML += `<div class="cell ${color(hero.attack,answer.attack)}">${hero.attack}</div>`;
-
-  if (year.checked){
-    let r=arrow(hero.year,answer.year);
-    row.innerHTML += `<div class="cell ${r.c}">${r.t}</div>`;
-  }
+  let y=arrow(hero.year,answer.year);
+  row.innerHTML+=`<div class="cell ${y.c}">${y.t}</div>`;
 
   board.appendChild(row);
 
   if(hero.name===answer.name){
-    gameOver=true;
-    input.disabled=true;
-    winScreen.style.display="block";
+    win.style.display="block";
   }
 
   input.value="";
 }
 
-startGame();
+loadHeroes();
 </script>
 
 </body>
