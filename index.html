@@ -1,143 +1,133 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Dota Guess</title>
-  <style>
-    body {
-      background: #0b1220;
-      color: white;
-      font-family: Arial;
-      text-align: center;
-    }
+<meta charset="UTF-8">
+<title>Dota Guess</title>
 
-    h1 {
-      margin: 20px;
-    }
+<style>
+body {
+  background: #0b1020;
+  color: white;
+  font-family: Arial;
+  text-align: center;
+}
 
-    input {
-      padding: 12px;
-      width: 260px;
-      border-radius: 8px;
-      border: none;
-      font-size: 16px;
-      background: #1e293b;
-      color: white;
-    }
+h1 {
+  margin-bottom: 10px;
+}
 
-    .suggestions {
-      width: 260px;
-      margin: auto;
-      background: #1e293b;
-      border-radius: 8px;
-      overflow: hidden;
-    }
+input {
+  padding: 12px;
+  width: 260px;
+  border-radius: 8px;
+  border: none;
+  font-size: 16px;
+}
 
-    .suggestion {
-      padding: 10px;
-      display: flex;
-      align-items: center;
-      cursor: pointer;
-    }
+.suggestions {
+  width: 260px;
+  margin: auto;
+  background: #1a2238;
+  border-radius: 8px;
+  overflow: hidden;
+}
 
-    .suggestion:hover {
-      background: #334155;
-    }
+.suggestion {
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
 
-    .suggestion img {
-      width: 32px;
-      margin-right: 10px;
-      border-radius: 4px;
-    }
+.suggestion:hover {
+  background: #2d3a63;
+}
 
-    .table {
-      margin-top: 20px;
-      display: inline-block;
-    }
+.suggestion img {
+  width: 32px;
+  margin-right: 10px;
+  border-radius: 4px;
+}
 
-    .row {
-      display: flex;
-      justify-content: center;
-    }
+.table {
+  margin-top: 20px;
+  display: inline-block;
+}
 
-    .cell {
-      width: 110px;
-      padding: 10px;
-      margin: 3px;
-      border-radius: 6px;
-      font-size: 14px;
-    }
+.row {
+  display: flex;
+}
 
-    .header .cell {
-      background: #1e293b;
-      font-weight: bold;
-    }
+.cell {
+  width: 110px;
+  padding: 10px;
+  margin: 3px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: bold;
+}
 
-    .green { background: #22c55e; }
-    .yellow { background: #eab308; color: black; }
-    .red { background: #ef4444; }
+.green { background: #2ecc71; }
+.yellow { background: #f1c40f; color: black; }
+.red { background: #e74c3c; }
 
-    #winScreen {
-      display: none;
-      margin-top: 20px;
-      font-size: 24px;
-    }
+.header .cell {
+  background: #1a2238;
+}
 
-    button {
-      padding: 10px 15px;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-      background: #2563eb;
-      color: white;
-    }
+#winScreen {
+  display: none;
+  margin-top: 20px;
+  font-size: 24px;
+}
 
-  </style>
+button {
+  padding: 10px 15px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  background: #3b82f6;
+  color: white;
+}
+</style>
 </head>
+
 <body>
 
 <h1>Угадай героя Dota 2</h1>
 
+<!-- настройки -->
+<div>
+<label><input type="checkbox" id="gender" checked> Пол</label>
+<label><input type="checkbox" id="race" checked> Раса</label>
+<label><input type="checkbox" id="roles" checked> Роль</label>
+<label><input type="checkbox" id="attr" checked> Атрибут</label>
+<label><input type="checkbox" id="complexity" checked> Сложность</label>
+<label><input type="checkbox" id="attack" checked> Атака</label>
+<label><input type="checkbox" id="year" checked> Год</label>
+</div>
+
+<br>
+
 <input id="input" placeholder="Начни вводить..." oninput="showSuggestions()">
 <div id="suggestions" class="suggestions"></div>
 
-<div class="table" id="board">
-  <div class="row header">
-    <div class="cell">Имя</div>
-    <div class="cell">Роль</div>
-    <div class="cell">Атрибут</div>
-    <div class="cell">Атака</div>
-  </div>
-</div>
+<div class="table" id="board"></div>
 
 <div id="winScreen">
-  🎉 ПОБЕДА! 🎉<br>
-  <button onclick="startGame()">Новая игра</button>
+🎉 ПОБЕДА! 🎉<br>
+<button onclick="startGame()">Новая игра</button>
 </div>
 
+<script src="heroes.js"></script>
+
 <script>
-let heroes = [];
 let answer;
 let gameOver = false;
 
-// 🔌 Загрузка всех героев
-fetch("https://api.opendota.com/api/heroStats")
-  .then(res => res.json())
-  .then(data => {
-    heroes = data.map(h => ({
-      name: h.localized_name.toLowerCase(),
-      roles: h.roles,
-      attr: h.primary_attr,
-      attack: h.attack_type,
-      img: "https://cdn.cloudflare.steamstatic.com" + h.img
-    }));
-
-    startGame();
-  });
-
 function startGame() {
   answer = heroes[Math.floor(Math.random()*heroes.length)];
-  document.getElementById("board").innerHTML =
-    document.querySelector(".header").outerHTML;
+  document.getElementById("board").innerHTML = "";
   document.getElementById("winScreen").style.display = "none";
   document.getElementById("input").disabled = false;
   gameOver = false;
@@ -148,18 +138,13 @@ function showSuggestions() {
   const box = document.getElementById("suggestions");
   box.innerHTML = "";
 
-  if (!input) return;
-
-  heroes
-    .filter(h => h.name.includes(input))
-    .slice(0, 6)
-    .forEach(h => {
-      const div = document.createElement("div");
-      div.className = "suggestion";
-      div.innerHTML = `<img src="${h.img}">${h.name}`;
-      div.onclick = () => selectHero(h.name);
-      box.appendChild(div);
-    });
+  heroes.filter(h => h.name.includes(input)).slice(0,5).forEach(h => {
+    const div = document.createElement("div");
+    div.className = "suggestion";
+    div.innerHTML = `<img src="${h.img}">${h.name}`;
+    div.onclick = () => selectHero(h.name);
+    box.appendChild(div);
+  });
 }
 
 function selectHero(name) {
@@ -177,6 +162,12 @@ function roleColor(roles) {
   return "red";
 }
 
+function arrow(val, correct) {
+  if (val === correct) return {class:"green", text:val};
+  if (val < correct) return {class:"yellow", text:val + " ⬆️"};
+  return {class:"yellow", text:val + " ⬇️"};
+}
+
 function guess(name) {
   if (gameOver) return;
 
@@ -186,21 +177,43 @@ function guess(name) {
   const row = document.createElement("div");
   row.className = "row";
 
-  row.innerHTML += `<div class="cell ${hero.name===answer.name?"green":"red"}">${hero.name}</div>`;
-  row.innerHTML += `<div class="cell ${roleColor(hero.roles)}">${hero.roles.join(",")}</div>`;
-  row.innerHTML += `<div class="cell ${color(hero.attr,answer.attr)}">${hero.attr}</div>`;
-  row.innerHTML += `<div class="cell ${color(hero.attack,answer.attack)}">${hero.attack}</div>`;
+  if (gender.checked)
+    row.innerHTML += `<div class="cell ${color(hero.gender,answer.gender)}">${hero.gender}</div>`;
+
+  if (race.checked)
+    row.innerHTML += `<div class="cell ${color(hero.race,answer.race)}">${hero.race}</div>`;
+
+  if (roles.checked)
+    row.innerHTML += `<div class="cell ${roleColor(hero.roles)}">${hero.roles.join(",")}</div>`;
+
+  if (attr.checked)
+    row.innerHTML += `<div class="cell ${color(hero.attr,answer.attr)}">${hero.attr}</div>`;
+
+  if (complexity.checked) {
+    let res = arrow(hero.complexity, answer.complexity);
+    row.innerHTML += `<div class="cell ${res.class}">${res.text}</div>`;
+  }
+
+  if (attack.checked)
+    row.innerHTML += `<div class="cell ${color(hero.attack,answer.attack)}">${hero.attack}</div>`;
+
+  if (year.checked) {
+    let res = arrow(hero.year, answer.year);
+    row.innerHTML += `<div class="cell ${res.class}">${res.text}</div>`;
+  }
 
   document.getElementById("board").appendChild(row);
 
   if (hero.name === answer.name) {
     gameOver = true;
-    document.getElementById("input").disabled = true;
+    input.disabled = true;
     document.getElementById("winScreen").style.display = "block";
   }
 
-  document.getElementById("input").value = "";
+  input.value = "";
 }
+
+startGame();
 </script>
 
 </body>
