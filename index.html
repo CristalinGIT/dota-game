@@ -6,61 +6,94 @@
 
 <style>
 body {
-  background:#0b1020;
+  background: linear-gradient(135deg,#0b1020,#1e293b);
   color:white;
   font-family:Arial;
   text-align:center;
 }
 
+h1 {
+  margin-top:20px;
+}
+
 input {
-  padding:10px;
-  width:250px;
-  border-radius:6px;
+  padding:12px;
+  width:260px;
+  border-radius:10px;
   border:none;
+  outline:none;
+  font-size:16px;
 }
 
 .suggestions {
-  width:250px;
+  width:260px;
   margin:auto;
   background:#1a2238;
+  border-radius:10px;
+  overflow:hidden;
 }
 
 .suggestion {
-  padding:8px;
+  padding:10px;
   display:flex;
   align-items:center;
   cursor:pointer;
 }
 
-.suggestion:hover { background:#2d3a63; }
+.suggestion:hover {
+  background:#2d3a63;
+}
 
 .suggestion img {
-  width:30px;
+  width:35px;
   margin-right:10px;
 }
 
-.row { display:flex; }
+.row {
+  display:flex;
+  justify-content:center;
+  margin-top:5px;
+}
 
 .cell {
   width:110px;
   padding:10px;
   margin:3px;
-  border-radius:6px;
+  border-radius:8px;
   font-size:13px;
+  transition:0.2s;
+}
+
+.cell:hover {
+  transform:scale(1.05);
 }
 
 .green{background:#22c55e;}
 .yellow{background:#facc15;color:black;}
 .red{background:#ef4444;}
-.header .cell{background:#1a2238;}
+
+.header .cell{
+  background:#1a2238;
+  font-weight:bold;
+}
+
+#board {
+  margin-top:20px;
+}
+
+#win {
+  margin-top:20px;
+  font-size:28px;
+  color:#22c55e;
+}
 </style>
 </head>
 
 <body>
 
-<h1>Угадай героя Dota 2</h1>
+<h1>🎮 Угадай героя Dota 2</h1>
 
-<input id="input" oninput="showSuggestions()">
+<input id="input" placeholder="Введите героя..." oninput="showSuggestions()">
 <div id="suggestions" class="suggestions"></div>
 
 <div id="board"></div>
@@ -82,14 +115,18 @@ async function loadHeroes(){
 
     return{
       name:name,
-      gender:extra[name]?.gender||"unknown",
-      race:extra[name]?.race||"unknown",
-      role:extra[name]?.role||"support",
       attr:h.primary_attr,
-      complexity:extra[name]?.complexity||2,
       attack:h.attack_type.toLowerCase(),
-      year:extra[name]?.year||2011,
-      img:"https://cdn.cloudflare.steamstatic.com"+h.img
+      img:"https://cdn.cloudflare.steamstatic.com"+h.img,
+
+      // 🔥 объединение данных
+      ...(extra[name] || {
+        gender:"male",
+        race:"unknown",
+        role:"support",
+        complexity:2,
+        year:2011
+      })
     }
   });
 
@@ -118,20 +155,27 @@ function showSuggestions(){
   let val=input.value.toLowerCase();
   suggestions.innerHTML="";
 
-  heroes.filter(h=>h.name.includes(val)).slice(0,5).forEach(h=>{
-    let d=document.createElement("div");
-    d.className="suggestion";
-    d.innerHTML=`<img src="${h.img}">${h.name}`;
-    d.onclick=()=>guess(h.name);
-    suggestions.appendChild(d);
-  });
+  heroes
+    .filter(h=>h.name.includes(val))
+    .slice(0,5)
+    .forEach(h=>{
+      let d=document.createElement("div");
+      d.className="suggestion";
+      d.innerHTML=`<img src="${h.img}">${h.name}`;
+      d.onclick=()=>guess(h.name);
+      suggestions.appendChild(d);
+    });
 }
 
-function color(a,b){return a===b?"green":"red";}
+function color(a,b){
+  return a===b?"green":"red";
+}
 
 function arrow(a,b){
   if(a===b)return{c:"green",t:a};
-  return a<b?{c:"yellow",t:a+" ⬆️"}:{c:"yellow",t:a+" ⬇️"};
+  return a<b
+    ?{c:"yellow",t:a+" ⬆️"}
+    :{c:"yellow",t:a+" ⬇️"};
 }
 
 function guess(name){
