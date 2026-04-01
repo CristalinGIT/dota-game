@@ -12,16 +12,13 @@ body {
   text-align:center;
 }
 
-h1 {
-  margin-top:20px;
-}
+h1 { margin-top:20px; }
 
 input {
   padding:12px;
   width:260px;
   border-radius:10px;
   border:none;
-  outline:none;
   font-size:16px;
 }
 
@@ -40,13 +37,15 @@ input {
   cursor:pointer;
 }
 
-.suggestion:hover {
-  background:#2d3a63;
-}
+.suggestion:hover { background:#2d3a63; }
 
 .suggestion img {
   width:35px;
   margin-right:10px;
+}
+
+.settings {
+  margin:20px;
 }
 
 .row {
@@ -61,11 +60,6 @@ input {
   margin:3px;
   border-radius:8px;
   font-size:13px;
-  transition:0.2s;
-}
-
-.cell:hover {
-  transform:scale(1.05);
 }
 
 .green{background:#22c55e;}
@@ -76,16 +70,6 @@ input {
   background:#1a2238;
   font-weight:bold;
 }
-
-#board {
-  margin-top:20px;
-}
-
-#win {
-  margin-top:20px;
-  font-size:28px;
-  color:#22c55e;
-}
 </style>
 </head>
 
@@ -93,62 +77,76 @@ input {
 
 <h1>🎮 Угадай героя Dota 2</h1>
 
+<div class="settings">
+  <label><input type="checkbox" value="gender" checked> Пол</label>
+  <label><input type="checkbox" value="race" checked> Раса</label>
+  <label><input type="checkbox" value="role" checked> Роль</label>
+  <label><input type="checkbox" value="attr" checked> Атрибут</label>
+  <label><input type="checkbox" value="complexity" checked> Сложность</label>
+  <label><input type="checkbox" value="attack" checked> Атака</label>
+  <label><input type="checkbox" value="year" checked> Год</label>
+</div>
+
 <input id="input" placeholder="Введите героя..." oninput="showSuggestions()">
 <div id="suggestions" class="suggestions"></div>
 
 <div id="board"></div>
-
 <h2 id="win" style="display:none;">🎉 Победа!</h2>
 
+<script src="heroes.js"></script>
 <script src="extraData.js"></script>
 
 <script>
 let heroes=[];
 let answer;
+let activeStats=[];
+
+function getActiveStats(){
+  activeStats = Array.from(document.querySelectorAll(".settings input:checked"))
+    .map(i=>i.value);
+}
 
 async function loadHeroes(){
-  let res=await fetch("https://api.opendota.com/api/heroStats");
-  let data=await res.json();
+  try{
+    let res=await fetch("https://api.opendota.com/api/heroStats");
+    let data=await res.json();
 
-  heroes=data.map(h=>{
-    let name=h.localized_name.toLowerCase();
+    heroes=data.map(h=>{
+      let name=h.localized_name.toLowerCase().replace("-", "");
 
-    return{
-      name:name,
-      attr:h.primary_attr,
-      attack:h.attack_type.toLowerCase(),
-      img:"https://cdn.cloudflare.steamstatic.com"+h.img,
+      return{
+        name:name,
+        attr:h.primary_attr,
+        attack:h.attack_type.toLowerCase(),
+        img:"https://cdn.cloudflare.steamstatic.com"+h.img,
 
-      // 🔥 объединение данных
-      ...(extra[name] || {
-        gender:"male",
-        race:"unknown",
-        role:"support",
-        complexity:2,
-        year:2011
-      })
-    }
-  });
+        ...(extra[name] || {})
+      }
+    });
+
+  }catch(e){
+    heroes=window.heroes;
+  }
 
   startGame();
 }
 
 function startGame(){
+  getActiveStats();
   answer=heroes[Math.floor(Math.random()*heroes.length)];
   board.innerHTML=createHeader();
   win.style.display="none";
 }
 
 function createHeader(){
-  return `<div class="row header">
-  <div class="cell">Пол</div>
-  <div class="cell">Раса</div>
-  <div class="cell">Роль</div>
-  <div class="cell">Атрибут</div>
-  <div class="cell">Сложн</div>
-  <div class="cell">Атака</div>
-  <div class="cell">Год</div>
-  </div>`;
+  let html=`<div class="row header">`;
+
+  activeStats.forEach(stat=>{
+    html+=`<div class="cell">${stat}</div>`;
+  });
+
+  html+=`</div>`;
+  return html;
 }
 
 function showSuggestions(){
@@ -184,18 +182,17 @@ function guess(name){
   let row=document.createElement("div");
   row.className="row";
 
-  row.innerHTML+=`<div class="cell ${color(hero.gender,answer.gender)}">${hero.gender}</div>`;
-  row.innerHTML+=`<div class="cell ${color(hero.race,answer.race)}">${hero.race}</div>`;
-  row.innerHTML+=`<div class="cell ${color(hero.role,answer.role)}">${hero.role}</div>`;
-  row.innerHTML+=`<div class="cell ${color(hero.attr,answer.attr)}">${hero.attr}</div>`;
+  activeStats.forEach(stat=>{
+    let valueHero = hero[stat];
+    let valueAnswer = answer[stat];
 
-  let c=arrow(hero.complexity,answer.complexity);
-  row.innerHTML+=`<div class="cell ${c.c}">${c.t}</div>`;
-
-  row.innerHTML+=`<div class="cell ${color(hero.attack,answer.attack)}">${hero.attack}</div>`;
-
-  let y=arrow(hero.year,answer.year);
-  row.innerHTML+=`<div class="cell ${y.c}">${y.t}</div>`;
+    if(stat==="complexity" || stat==="year"){
+      let r=arrow(valueHero,valueAnswer);
+      row.innerHTML+=`<div class="cell ${r.c}">${r.t}</div>`;
+    } else {
+      row.innerHTML+=`<div class="cell ${color(valueHero,valueAnswer)}">${valueHero}</div>`;
+    }
+  });
 
   board.appendChild(row);
 
