@@ -3,64 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <title>Dota Guess</title>
-
-<style>
-body {
-  background:#0b1020;
-  color:white;
-  font-family:Arial;
-  text-align:center;
-}
-
-input {
-  padding:10px;
-  width:250px;
-  border-radius:6px;
-  border:none;
-}
-
-.suggestions {
-  width:250px;
-  margin:auto;
-  background:#1a2238;
-}
-
-.suggestion {
-  padding:8px;
-  display:flex;
-  align-items:center;
-  cursor:pointer;
-}
-
-.suggestion:hover { background:#2d3a63; }
-
-.suggestion img {
-  width:30px;
-  margin-right:10px;
-}
-
-.row { display:flex; }
-
-.cell {
-  width:110px;
-  padding:10px;
-  margin:3px;
-  border-radius:6px;
-  font-size:13px;
-}
-
-.green{background:#22c55e;}
-.yellow{background:#facc15;color:black;}
-.red{background:#ef4444;}
-.header .cell{background:#1a2238;}
-</style>
+<link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
 
 <h1>Угадай героя Dota 2</h1>
 
-<input id="input" oninput="showSuggestions()">
+<input id="input" placeholder="Начни вводить..." oninput="showSuggestions()">
 <div id="suggestions" class="suggestions"></div>
 
 <div id="board"></div>
@@ -82,13 +32,13 @@ async function loadHeroes(){
 
     return{
       name:name,
-      gender:extra[name]?.gender||"unknown",
-      race:extra[name]?.race||"unknown",
-      role:extra[name]?.role||"support",
+      gender:"male", // дефолт
+      race:"unknown",
+      role:extra[name]?.role || "support",
       attr:h.primary_attr,
-      complexity:extra[name]?.complexity||2,
+      complexity:extra[name]?.complexity || 2,
       attack:h.attack_type.toLowerCase(),
-      year:extra[name]?.year||2011,
+      year:2011,
       img:"https://cdn.cloudflare.steamstatic.com"+h.img
     }
   });
