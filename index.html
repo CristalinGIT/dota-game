@@ -6,151 +6,87 @@
 
 <style>
 body {
-  background: linear-gradient(135deg,#0b1020,#1e293b);
+  background:#0b1020;
   color:white;
   font-family:Arial;
   text-align:center;
 }
 
-h1 { margin-top:20px; }
-
 input {
-  padding:12px;
-  width:260px;
-  border-radius:10px;
-  border:none;
-  font-size:16px;
-}
-
-.suggestions {
-  width:260px;
-  margin:auto;
-  background:#1a2238;
-  border-radius:10px;
-  overflow:hidden;
-}
-
-.suggestion {
   padding:10px;
-  display:flex;
-  align-items:center;
-  cursor:pointer;
+  width:250px;
 }
 
-.suggestion:hover { background:#2d3a63; }
-
-.suggestion img {
-  width:35px;
-  margin-right:10px;
-}
-
-.settings {
-  margin:20px;
-}
-
-.row {
-  display:flex;
-  justify-content:center;
-  margin-top:5px;
-}
-
+.row { display:flex; justify-content:center; }
 .cell {
   width:110px;
-  padding:10px;
+  padding:8px;
   margin:3px;
-  border-radius:8px;
-  font-size:13px;
 }
 
 .green{background:#22c55e;}
 .yellow{background:#facc15;color:black;}
 .red{background:#ef4444;}
-
-.header .cell{
-  background:#1a2238;
-  font-weight:bold;
-}
 </style>
 </head>
 
 <body>
 
-<h1>🎮 Угадай героя Dota 2</h1>
+<h1>Угадай героя</h1>
 
-<div class="settings">
-  <label><input type="checkbox" value="gender" checked> Пол</label>
-  <label><input type="checkbox" value="race" checked> Раса</label>
-  <label><input type="checkbox" value="role" checked> Роль</label>
-  <label><input type="checkbox" value="attr" checked> Атрибут</label>
-  <label><input type="checkbox" value="complexity" checked> Сложность</label>
-  <label><input type="checkbox" value="attack" checked> Атака</label>
-  <label><input type="checkbox" value="year" checked> Год</label>
-</div>
-
-<input id="input" placeholder="Введите героя..." oninput="showSuggestions()">
-<div id="suggestions" class="suggestions"></div>
+<input id="input" oninput="showSuggestions()">
+<div id="suggestions"></div>
 
 <div id="board"></div>
-<h2 id="win" style="display:none;">🎉 Победа!</h2>
+<h2 id="win" style="display:none;">Победа</h2>
 
-<script src="heroes.js"></script>
 <script src="extraData.js"></script>
 
 <script>
 let heroes=[];
 let answer;
-let activeStats=[];
 
-function getActiveStats(){
-  activeStats = Array.from(document.querySelectorAll(".settings input:checked"))
-    .map(i=>i.value);
+function normalizeName(name){
+  return name
+    .toLowerCase()
+    .replace(/[^a-z ]/g, "")
+    .trim();
 }
 
 async function loadHeroes(){
-  try{
-    let res=await fetch("https://api.opendota.com/api/heroStats");
-    let data=await res.json();
+  let res = await fetch("https://api.opendota.com/api/heroStats");
+  let data = await res.json();
 
-    heroes=data.map(h=>{
-      let name=h.localized_name.toLowerCase().replace("-", "");
+  heroes = data.map(h=>{
+    let name = normalizeName(h.localized_name);
+    let extraData = extra[name] || {};
 
-      return{
-        name:name,
-        attr:h.primary_attr,
-        attack:h.attack_type.toLowerCase(),
-        img:"https://cdn.cloudflare.steamstatic.com"+h.img,
+    return {
+      name: name,
 
-        ...(extra[name] || {})
-      }
-    });
+      attr: h.primary_attr,
+      attack: h.attack_type.toLowerCase(),
 
-  }catch(e){
-    heroes=window.heroes;
-  }
+      gender: extraData.gender ?? "unknown",
+      race: extraData.race ?? "unknown",
+      role: extraData.role ?? "unknown",
+      complexity: extraData.complexity ?? 2,
+      year: extraData.year ?? 2011,
+
+      img: "https://cdn.cloudflare.steamstatic.com"+h.img
+    }
+  });
 
   startGame();
 }
 
 function startGame(){
-  getActiveStats();
-  answer=heroes[Math.floor(Math.random()*heroes.length)];
-  board.innerHTML=createHeader();
-  win.style.display="none";
-}
-
-function createHeader(){
-  let html=`<div class="row header">`;
-
-  activeStats.forEach(stat=>{
-    html+=`<div class="cell">${stat}</div>`;
-  });
-
-  html+=`</div>`;
-  return html;
+  answer = heroes[Math.floor(Math.random()*heroes.length)];
+  board.innerHTML="";
 }
 
 function showSuggestions(){
-  let val=input.value.toLowerCase();
+  let val = normalizeName(input.value);
   suggestions.innerHTML="";
 
   heroes
@@ -158,8 +94,7 @@ function showSuggestions(){
     .slice(0,5)
     .forEach(h=>{
       let d=document.createElement("div");
-      d.className="suggestion";
-      d.innerHTML=`<img src="${h.img}">${h.name}`;
+      d.innerText=h.name;
       d.onclick=()=>guess(h.name);
       suggestions.appendChild(d);
     });
@@ -172,27 +107,28 @@ function color(a,b){
 function arrow(a,b){
   if(a===b)return{c:"green",t:a};
   return a<b
-    ?{c:"yellow",t:a+" ⬆️"}
-    :{c:"yellow",t:a+" ⬇️"};
+    ?{c:"yellow",t:a+" ↑"}
+    :{c:"yellow",t:a+" ↓"};
 }
 
 function guess(name){
-  let hero=heroes.find(h=>h.name===name);
+  let hero = heroes.find(h=>h.name===name);
 
   let row=document.createElement("div");
   row.className="row";
 
-  activeStats.forEach(stat=>{
-    let valueHero = hero[stat];
-    let valueAnswer = answer[stat];
+  row.innerHTML+=`<div class="cell ${color(hero.gender,answer.gender)}">${hero.gender}</div>`;
+  row.innerHTML+=`<div class="cell ${color(hero.race,answer.race)}">${hero.race}</div>`;
+  row.innerHTML+=`<div class="cell ${color(hero.role,answer.role)}">${hero.role}</div>`;
+  row.innerHTML+=`<div class="cell ${color(hero.attr,answer.attr)}">${hero.attr}</div>`;
 
-    if(stat==="complexity" || stat==="year"){
-      let r=arrow(valueHero,valueAnswer);
-      row.innerHTML+=`<div class="cell ${r.c}">${r.t}</div>`;
-    } else {
-      row.innerHTML+=`<div class="cell ${color(valueHero,valueAnswer)}">${valueHero}</div>`;
-    }
-  });
+  let c=arrow(hero.complexity,answer.complexity);
+  row.innerHTML+=`<div class="cell ${c.c}">${c.t}</div>`;
+
+  row.innerHTML+=`<div class="cell ${color(hero.attack,answer.attack)}">${hero.attack}</div>`;
+
+  let y=arrow(hero.year,answer.year);
+  row.innerHTML+=`<div class="cell ${y.c}">${y.t}</div>`;
 
   board.appendChild(row);
 
