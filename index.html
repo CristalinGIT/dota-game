@@ -13,15 +13,13 @@ body {
   font-family:Arial;
   display:flex;
   justify-content:center;
-  align-items:flex-start;
 }
-
 
 .container {
   width:900px;
   padding:30px 20px;
+  text-align:center;
 }
-
 
 h1 {
   margin-bottom:20px;
@@ -36,17 +34,6 @@ input {
   font-size:16px;
   background:#e5e7eb;
   color:black;
-}
-
-
-button {
-  padding:10px 20px;
-  border:none;
-  border-radius:8px;
-  background:#2563eb;
-  color:white;
-  cursor:pointer;
-  margin-top:10px;
 }
 
 #suggestions {
@@ -66,7 +53,6 @@ button {
   background:#334155;
 }
 
-
 .row {
   display:flex;
   justify-content:center;
@@ -74,23 +60,17 @@ button {
   margin-top:8px;
 }
 
-
 .cell {
   min-width:90px;
   padding:10px;
   margin:5px;
   border-radius:10px;
   font-size:14px;
-  text-align:center;
 }
 
 .header .cell {
   background:#1e293b;
   font-weight:bold;
-}
-
-img {
-  border-radius:6px;
 }
 
 .green { background:#22c55e; }
@@ -103,19 +83,18 @@ img {
   padding:20px;
   border-radius:12px;
 }
-.settings label {
-  margin: 0 10px;
-}
 
+.settings label {
+  margin:0 10px;
+}
 </style>
 </head>
 
 <body>
 
-<div class="row header">
+<div class="container">
 
-
-<h1>Угадай героя</h1>
+<h1>🎮 Угадай героя Dota 2</h1>
 
 <div class="settings">
   <h3>Настройки</h3>
@@ -125,27 +104,27 @@ img {
 
   <br><br>
 
-  <label><input type="checkbox" checked id="gender"> Gender</label>
-  <label><input type="checkbox" checked id="race"> Race</label>
-  <label><input type="checkbox" checked id="role"> Role</label>
-  <label><input type="checkbox" checked id="year"> Year</label>
+  <label><input type="checkbox" checked id="gender"> Пол</label>
+  <label><input type="checkbox" checked id="race"> Раса</label>
+  <label><input type="checkbox" checked id="role"> Роль</label>
+  <label><input type="checkbox" checked id="year"> Год</label>
 
-  <br>
-  <button onclick="applySettings()">Начать игру</button>
+  <br><br>
+  <button onclick="applySettings()">Начать</button>
 </div>
 
 <input id="input" placeholder="Введите героя..." oninput="showSuggestions()">
 <div id="suggestions"></div>
 
-<div class="row">
-  <div class="cell">Hero</div>
-  <div class="cell">Gender</div>
-  <div class="cell">Race</div>
-  <div class="cell">Role</div>
-  <div class="cell">Attr</div>
-  <div class="cell">Complexity</div>
-  <div class="cell">Attack</div>
-  <div class="cell">Year</div>
+<div class="row header">
+  <div class="cell">Герой</div>
+  <div class="cell">Пол</div>
+  <div class="cell">Раса</div>
+  <div class="cell">Роль</div>
+  <div class="cell">Атрибут</div>
+  <div class="cell">Сложность</div>
+  <div class="cell">Атака</div>
+  <div class="cell">Год</div>
 </div>
 
 <div id="board"></div>
@@ -185,16 +164,13 @@ async function loadHeroes(){
     return {
       name: name,
       display: h.localized_name,
-
       attr: h.primary_attr,
       attack: h.attack_type.toLowerCase(),
-
       gender: extraData.gender ?? "unknown",
       race: extraData.race ?? "unknown",
       role: extraData.role ?? "unknown",
       complexity: extraData.complexity ?? 2,
       year: extraData.year ?? 2011,
-
       img: "https://cdn.cloudflare.steamstatic.com"+h.img
     }
   });
@@ -222,14 +198,14 @@ function showSuggestions(){
   let val = normalizeName(input.value);
   suggestions.innerHTML = "";
 
-  if(val.length < 2) return;
+  if(val.length < 1) return;
 
   heroes
     .filter(h=>h.name.includes(val))
     .slice(0,5)
     .forEach(h=>{
       let d=document.createElement("div");
-      d.innerText=h.display;
+      d.innerHTML = `<img src="${h.img}" width="30"> ${h.display}`;
       d.onclick=()=>guess(h.name);
       suggestions.appendChild(d);
     });
@@ -258,17 +234,10 @@ function guess(name){
   let row=document.createElement("div");
   row.className="row";
 
-  row.innerHTML += `<div class="cell"><img src="${hero.img}" width="50"><br>${hero.display}</div>`;
-
-  if(settings.useGender)
-    row.innerHTML += `<div class="cell ${color(hero.gender,answer.gender)}">${hero.gender}</div>`;
-
-  if(settings.useRace)
-    row.innerHTML += `<div class="cell ${color(hero.race,answer.race)}">${hero.race}</div>`;
-
-  if(settings.useRole)
-    row.innerHTML += `<div class="cell ${color(hero.role,answer.role)}">${hero.role}</div>`;
-
+  row.innerHTML += `<div class="cell"><img src="${hero.img}" width="40"><br>${hero.display}</div>`;
+  row.innerHTML += `<div class="cell ${color(hero.gender,answer.gender)}">${hero.gender}</div>`;
+  row.innerHTML += `<div class="cell ${color(hero.race,answer.race)}">${hero.race}</div>`;
+  row.innerHTML += `<div class="cell ${color(hero.role,answer.role)}">${hero.role}</div>`;
   row.innerHTML += `<div class="cell ${color(hero.attr,answer.attr)}">${hero.attr}</div>`;
 
   let c = arrow(hero.complexity,answer.complexity);
@@ -276,10 +245,8 @@ function guess(name){
 
   row.innerHTML += `<div class="cell ${color(hero.attack,answer.attack)}">${hero.attack}</div>`;
 
-  if(settings.useYear){
-    let y = arrow(hero.year,answer.year);
-    row.innerHTML += `<div class="cell ${y.c}">${y.t}</div>`;
-  }
+  let y = arrow(hero.year,answer.year);
+  row.innerHTML += `<div class="cell ${y.c}">${y.t}</div>`;
 
   board.appendChild(row);
 
