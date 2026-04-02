@@ -7,18 +7,21 @@
 <style>
 body {
   margin:0;
-  background:#0b1020;
+  min-height:100vh;
+  background: linear-gradient(135deg, #0b1020, #1e293b);
   color:white;
   font-family:Arial;
   display:flex;
   justify-content:center;
+  align-items:flex-start;
 }
+
 
 .container {
   width:900px;
-  text-align:center;
-  padding:20px;
+  padding:30px 20px;
 }
+
 
 h1 {
   margin-bottom:20px;
@@ -27,11 +30,14 @@ h1 {
 input {
   padding:12px;
   width:300px;
-  border-radius:8px;
+  border-radius:10px;
   border:none;
   outline:none;
   font-size:16px;
+  background:#e5e7eb;
+  color:black;
 }
+
 
 button {
   padding:10px 20px;
@@ -44,31 +50,43 @@ button {
 }
 
 #suggestions {
-  margin-top:5px;
+  margin:10px auto;
+  width:300px;
+  background:#1e293b;
+  border-radius:10px;
+  overflow:hidden;
 }
 
 #suggestions div {
-  background:#1f2937;
-  padding:8px;
+  padding:10px;
   cursor:pointer;
 }
 
 #suggestions div:hover {
-  background:#374151;
+  background:#334155;
 }
+
 
 .row {
   display:flex;
   justify-content:center;
-  margin-top:5px;
+  flex-wrap:wrap;
+  margin-top:8px;
 }
 
+
 .cell {
-  width:110px;
+  min-width:90px;
   padding:10px;
-  margin:3px;
-  border-radius:8px;
+  margin:5px;
+  border-radius:10px;
   font-size:14px;
+  text-align:center;
+}
+
+.header .cell {
+  background:#1e293b;
+  font-weight:bold;
 }
 
 img {
@@ -80,17 +98,22 @@ img {
 .red { background:#ef4444; }
 
 .settings {
-  margin-bottom:20px;
-  background:#111827;
-  padding:15px;
-  border-radius:10px;
+  margin-bottom:25px;
+  background:#1e293b;
+  padding:20px;
+  border-radius:12px;
 }
+.settings label {
+  margin: 0 10px;
+}
+
 </style>
 </head>
 
 <body>
 
-<div class="container">
+<div class="row header">
+
 
 <h1>Угадай героя</h1>
 
